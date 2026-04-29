@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
+import asyncio
+import time
+import aiohttp
 
 from gli4py import GLinet
 from gli4py.enums import TailscaleConnection
