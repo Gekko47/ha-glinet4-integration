@@ -104,7 +104,7 @@ class GLinetDevice(ScannerEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the attributes."""
+        """Return extended device attributes."""
 
         attrs = {
             "interface_type": str(self._device.interface_type),
@@ -121,6 +121,15 @@ class GLinetDevice(ScannerEntity):
             attrs["last_time_reachable"] = self._device.last_activity.isoformat(
                 timespec="seconds"
             )
+
+        # Traffic (only if you added it earlier in update logic)
+        attrs["rx_bytes"] = getattr(self._device, "_rx_bytes", 0)
+        attrs["tx_bytes"] = getattr(self._device, "_tx_bytes", 0)
+
+        # Speed (if implemented)
+        attrs["rx_speed"] = round(getattr(self._device, "_rx_speed", 0.0), 2)
+        attrs["tx_speed"] = round(getattr(self._device, "_tx_speed", 0.0), 2)
+
         return attrs
 
     @cached_property

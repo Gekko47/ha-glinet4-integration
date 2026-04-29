@@ -727,6 +727,13 @@ class ClientDevInfo:
         self._last_activity: datetime = dt_util.utcnow() - timedelta(days=1)
         self._connected: bool = False
         self._if_type: DeviceInterfaceType = DeviceInterfaceType.UNKNOWN
+        self.rx_bytes = 0
+        self.tx_bytes = 0
+        self._last_rx_bytes = 0
+        self._last_tx_bytes = 0
+        self._last_seen = None
+        self._rx_speed = 0.0
+        self._tx_speed = 0.0
 
     def update(self, dev_info: dict | None = None, consider_home: int = 0) -> None:
         """Update connected device info."""
@@ -749,6 +756,23 @@ class ClientDevInfo:
             self._if_type = list(DeviceInterfaceType)[
                 dev_info.get("type", 5)
             ]  # TODO be more index safe
+            rx = dev_info.get("rx_bytes", 0)
+            tx = dev_info.get("tx_bytes", 0)
+
+            now_ts = now.timestamp()
+
+            if self._last_seen is not None:
+                dt = now_ts - self._last_seen
+                if dt > 0:
+                    self._rx_speed = (rx - self._last_rx_bytes) / dt
+                    self._tx_speed = (tx - self._last_tx_bytes) / dt
+
+            self._last_rx_bytes = rx
+            self._last_tx_bytes = tx
+            self._last_seen = now_ts
+
+            self._rx_bytes = rx
+            self._tx_bytes = tx
         # a device might not actually be online but we want to consider it home
         elif self._connected:
             self._connected = (
