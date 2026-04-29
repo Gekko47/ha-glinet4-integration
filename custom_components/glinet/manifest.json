@@ -10,7 +10,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/HarvsG/ha-glinet4-integration/issues",
-  "requirements": ["gli4py==0.0.17b3"],
+  "requirements": ["gli4py @ git+https://github.com/benklop/gli4py.git@7ff6f3def21b1492b7303a6e99c0efcf7e72961d"],
   "ssdp": [],
-  "version": "0.1.9"
+  "version": "0.1.10"
 }

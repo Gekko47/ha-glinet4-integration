@@ -44,5 +44,79 @@
         }
       }
     }
+  },
+  "services": {
+    "repeater_connect": {
+      "name": "Repeater: connect to Wi-Fi",
+      "description": "Adds or joins an upstream Wi-Fi network using the router repeater / client (STA) path. May briefly interrupt connectivity.",
+      "fields": {
+        "config_entry": {
+          "name": "Router",
+          "description": "The GL-iNet integration entry to use."
+        },
+        "ssid": {
+          "name": "SSID",
+          "description": "Name of the Wi-Fi network to join."
+        },
+        "password": {
+          "name": "Wi-Fi password",
+          "description": "Passphrase for the uplink network. Store secrets in Home Assistant secrets, not in plain text automations."
+        },
+        "remember": {
+          "name": "Save network",
+          "description": "When true, the profile is saved on the router (typical GL.iNet 4.x behavior)."
+        },
+        "manual": {
+          "name": "Manual setup",
+          "description": "Passed through to the router connect RPC (default false)."
+        },
+        "protocol": {
+          "name": "Protocol",
+          "description": "Usually dhcp for Wi-Fi uplink."
+        },
+        "bssid": {
+          "name": "BSSID",
+          "description": "Optional MAC of the specific access point to lock onto."
+        },
+        "extra": {
+          "name": "Extra RPC fields",
+          "description": "Optional object merged into the router connect payload for firmware-specific options."
+        }
+      }
+    },
+    "repeater_scan": {
+      "name": "Repeater: scan for networks",
+      "description": "Runs an uplink Wi-Fi scan. Use a response variable when calling to capture results.",
+      "fields": {
+        "config_entry": {
+          "name": "Router",
+          "description": "The GL-iNet integration entry to use."
+        },
+        "band": {
+          "name": "Band hint",
+          "description": "Optional hint passed to the router (e.g. radio or band key supported by your firmware)."
+        }
+      }
+    },
+    "repeater_disconnect": {
+      "name": "Repeater: disconnect uplink",
+      "description": "Disconnects the current repeater / STA uplink session.",
+      "fields": {
+        "config_entry": {
+          "name": "Router",
+          "description": "The GL-iNet integration entry to use."
+        }
+      }
+    },
+    "repeater_get_saved_ap_list": {
+      "name": "Repeater: list saved uplink networks",
+      "description": "Returns saved uplink profiles from the router. Passphrases are redacted.",
+      "fields": {
+        "config_entry": {
+          "name": "Router",
+          "description": "The GL-iNet integration entry to use."
+        }
+      }
+    }
   }
 }

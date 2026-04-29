@@ -1,0 +1,63 @@
+# Service field UI (names/descriptions: strings.json under "services").
+repeater_connect:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: glinet
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password
+    remember:
+      default: true
+      selector:
+        boolean:
+    manual:
+      default: false
+      selector:
+        boolean:
+    protocol:
+      default: dhcp
+      selector:
+        text:
+    bssid:
+      selector:
+        text:
+    extra:
+      advanced: true
+      selector:
+        object:
+
+repeater_scan:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: glinet
+    band:
+      selector:
+        text:
+
+repeater_disconnect:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: glinet
+
+repeater_get_saved_ap_list:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: glinet
