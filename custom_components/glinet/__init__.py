@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
+    from .router import GLinetRouter
+
 PLATFORMS = ["button", "device_tracker", "sensor", "switch"]
 
 
@@ -20,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .router import GLinetRouter
     from .services import async_ensure_services
 
-    # Store an API object for platforms to access
     router = GLinetRouter(hass, entry)
     await router.setup()
 
