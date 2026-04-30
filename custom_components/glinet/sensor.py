@@ -156,6 +156,41 @@ SYSTEM_SENSORS: list[SystemStatusEntityDescription] = [
 ]
 
 
+class WiFiRadioSensorDescription(SensorEntityDescription, frozen_or_thawed=True):
+    """Describes a WiFi radio sensor entity."""
+
+    value_fn: Callable[[Any], str | int | None]
+
+
+# WiFi Radio Sensor Descriptions - instantiated per radio
+WIFI_RADIO_SENSORS: list[WiFiRadioSensorDescription] = [
+    WiFiRadioSensorDescription(
+        key="channel",
+        name="Channel",
+        has_entity_name=True,
+        icon="mdi:wifi",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda radio: radio.channel if radio else None,
+    ),
+    WiFiRadioSensorDescription(
+        key="band",
+        name="Band",
+        has_entity_name=True,
+        icon="mdi:wifi",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda radio: radio.band if radio else None,
+    ),
+    WiFiRadioSensorDescription(
+        key="encryption",
+        name="Encryption",
+        has_entity_name=True,
+        icon="mdi:lock",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda radio: radio.encryption if radio else None,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -165,7 +200,7 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up GL-iNet Sensors")
 
     router: GLinetRouter = entry.runtime_data
-    sensors: list[SystemStatusSensor | SystemUptimeSensor] = [
+    sensors: list[SystemStatusSensor | SystemUptimeSensor | WiFiRadioSensor] = [
         SystemStatusSensor(router=router, entity_description=description)
         for description in SYSTEM_SENSORS
     ]
@@ -184,6 +219,17 @@ async def async_setup_entry(
             ),
         )
     )
+
+    # Add WiFi radio sensors for each discovered radio
+    for radio_name in router.wifi_radios:
+        for description in WIFI_RADIO_SENSORS:
+            sensors.append(
+                WiFiRadioSensor(
+                    router=router,
+                    radio_name=radio_name,
+                    entity_description=description,
+                )
+            )
 
     for sensor in sensors:
         if sensor.native_value is None:
@@ -304,3 +350,35 @@ class SystemUptimeSensor(GliSensorBase):
             self.router.system_status["uptime"], self._current_value
         )
         return self._current_value
+
+
+class WiFiRadioSensor(SensorEntity):
+    """WiFi radio sensor entity."""
+
+    def __init__(
+        self,
+        router: GLinetRouter,
+        radio_name: str,
+        entity_description: WiFiRadioSensorDescription,
+    ) -> None:
+        """Initialize the WiFi radio sensor."""
+        self.router = router
+        self._radio_name = radio_name
+        self.entity_description: WiFiRadioSensorDescription = entity_description
+        self._attr_device_info = router.device_info
+        self._attr_has_entity_name = True
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id of the sensor."""
+        return f"glinet_sensor/{self.router.factory_mac}/wifi_{self._radio_name}_{self.entity_description.key}"
+
+    @property
+    def native_value(self) -> str | int | None:
+        """Return the native value of the sensor."""
+        radio = self.router.wifi_radios.get(self._radio_name)
+        if radio is None:
+            return None
+        return self.entity_description.value_fn(radio)
+

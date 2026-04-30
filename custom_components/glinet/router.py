@@ -104,12 +104,17 @@ class GLinetRouter:
         self._factory_mac: str = "UNKNOWN"
         self._model: str = "UNKNOWN"
         self._sw_v: str = "UNKNOWN"
+        self._router_info: dict = {}
+        self._software_features: dict = {}
 
         # State
         self._devices: dict[str, ClientDevInfo] = {}
         self._connected_devices: int = 0
         self._wifi_ifaces: dict[str, WifiInterface] = {}
+        self._wifi_radios: dict[str, WifiRadioInfo] = {}
         self._system_status: dict = {}
+        self._vpn_services: dict[str, dict] = {}
+        self._client_counts: dict[str, int] = {}
         self._wireguard_clients: dict[str, WireGuardClient] = {}
         self._wireguard_connections: list[WireGuardClient] | None = None
         self._tailscale_config: dict = {}
@@ -157,6 +162,8 @@ class GLinetRouter:
         self._model = router_info[CONF_MODEL]
         self._sw_v = router_info["firmware_version"]
         self._factory_mac = router_info[CONF_MAC]
+        self._router_info = router_info
+        self._software_features = router_info.get("software_feature", {})
 
         self._late_init_complete = True
 
@@ -343,6 +350,38 @@ class GLinetRouter:
         self._system_status = status.get("system", {})
         result = parse_network_array(status.get("network", []))
         self._wan_status = result.states
+
+        # Parse WiFi radio details
+        self._wifi_radios = {}
+        for wifi_iface in status.get("wifi", []):
+            name = wifi_iface.get("name", "")
+            if name:
+                self._wifi_radios[name] = WifiRadioInfo(
+                    name=name,
+                    enabled=wifi_iface.get("enabled", False),
+                    ssid=wifi_iface.get("ssid", ""),
+                    band=wifi_iface.get("band", ""),
+                    channel=wifi_iface.get("channel", 0),
+                    guest=wifi_iface.get("guest", False),
+                    hidden=wifi_iface.get("hidden", False),
+                    encryption=wifi_iface.get("encryption", ""),
+                    up=wifi_iface.get("up", False),
+                )
+
+        # Parse VPN service statuses
+        self._vpn_services = {}
+        for service in status.get("service", []):
+            name = service.get("name", "")
+            if name:
+                self._vpn_services[name] = service
+
+        # Parse client counts
+        self._client_counts = {}
+        client_data = status.get("client", [])
+        if isinstance(client_data, list) and client_data:
+            client_info = client_data[0]  # Usually a single dict
+            if isinstance(client_info, dict):
+                self._client_counts = client_info
 
         for iface in result.malformed_interfaces:
             if iface not in self._warned_wan_interfaces:
@@ -652,6 +691,26 @@ class GLinetRouter:
         return self._system_status
 
     @property
+    def wifi_radios(self) -> dict[str, WifiRadioInfo]:
+        """Property for WiFi radio details."""
+        return self._wifi_radios
+
+    @property
+    def vpn_services(self) -> dict[str, dict]:
+        """Property for VPN service statuses."""
+        return self._vpn_services
+
+    @property
+    def client_counts(self) -> dict[str, int]:
+        """Property for connected client counts."""
+        return self._client_counts
+
+    @property
+    def software_features(self) -> dict:
+        """Property for software features supported by the router."""
+        return self._software_features
+
+    @property
     def wan_status(self) -> dict[str, WanInterfaceState]:
         """Return the latest WAN interface states keyed by interface name."""
         return self._wan_status
@@ -688,6 +747,21 @@ class WireGuardClient:
     group_id: int
     peer_id: int
     tunnel_id: int | None
+
+
+@dataclass
+class WifiRadioInfo:
+    """Detailed information about a WiFi radio."""
+
+    name: str
+    enabled: bool
+    ssid: str
+    band: str
+    channel: int
+    guest: bool
+    hidden: bool
+    encryption: str
+    up: bool
 
 
 def wifi_iface_band_label(iface_key: str) -> str | None:
@@ -757,12 +831,12 @@ class ClientDevInfo:
                 dev_info.get("type", 5)
             ]  # TODO be more index safe
 
-            self._last_rx_bytes = dev_info.get("_rx_bytes", 0)
-            self._last_tx_bytes = dev_info.get("_tx_bytes", 0)
+            self._last_rx_bytes = dev_info.get("rx_bytes", 0)
+            self._last_tx_bytes = dev_info.get("tx_bytes", 0)
 
-            self._rx_bytes = dev_info.get("_rx_bytes", 0)
-            self._tx_bytes = dev_info.get("_tx_bytes", 0)
-            
+            self._rx_bytes = dev_info.get("rx_bytes", 0)
+            self._tx_bytes = dev_info.get("tx_bytes", 0)
+
             now_ts = now.timestamp()
             self._last_seen = now_ts
 
