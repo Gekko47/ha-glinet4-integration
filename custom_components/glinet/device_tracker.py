@@ -122,7 +122,7 @@ class GLinetDevice(ScannerEntity):
                 timespec="seconds"
             )
 
-        # Traffic (only if you added it earlier in update logic)
+        # Traffic (added in update logic)
         attrs["rx_bytes"] = getattr(self._device, "_rx_bytes", 0)
         attrs["tx_bytes"] = getattr(self._device, "_tx_bytes", 0)
 
