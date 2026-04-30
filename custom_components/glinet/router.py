@@ -727,8 +727,8 @@ class ClientDevInfo:
         self._last_activity: datetime = dt_util.utcnow() - timedelta(days=1)
         self._connected: bool = False
         self._if_type: DeviceInterfaceType = DeviceInterfaceType.UNKNOWN
-        self.rx_bytes = 0
-        self.tx_bytes = 0
+        self._rx_bytes = 0
+        self._tx_bytes = 0
         self._last_rx_bytes = 0
         self._last_tx_bytes = 0
         self._last_seen = None
@@ -757,11 +757,11 @@ class ClientDevInfo:
                 dev_info.get("type", 5)
             ]  # TODO be more index safe
 
-            self._last_rx_bytes = dev_info.get("rx_bytes", 0)
-            self._last_tx_bytes = dev_info.get("tx_bytes", 0)
+            self._last_rx_bytes = dev_info.get("_rx_bytes", 0)
+            self._last_tx_bytes = dev_info.get("_tx_bytes", 0)
 
-            self._rx_bytes = dev_info.get("rx_bytes", 0)
-            self._tx_bytes = dev_info.get("tx_bytes", 0)
+            self._rx_bytes = dev_info.get("_rx_bytes", 0)
+            self._tx_bytes = dev_info.get("_tx_bytes", 0)
             
             now_ts = now.timestamp()
             self._last_seen = now_ts
